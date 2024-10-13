@@ -3,3 +3,7 @@ containers/certs/*
 *.pyc
 containers/greengrass/credentials
 *.log
+amplify/node_modules/*
+amplify/requirements-dev.txt
+deploy/package-lock.json
+deploy/package-lock.json

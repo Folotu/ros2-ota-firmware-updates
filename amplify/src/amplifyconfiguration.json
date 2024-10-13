@@ -1,0 +1,11 @@
+{ 
+    "aws_cloud_logic_custom": [
+        {
+            "name": "DeviceApi",  
+            "endpoint": "https://XXXXXXXX.execute-api.us-east-1.amazonaws.com/prod",  
+            "region": "us-east-1"  
+        }
+    ]
+}
+
+
