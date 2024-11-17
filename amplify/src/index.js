@@ -1,10 +1,40 @@
 import { Amplify } from 'aws-amplify';
-import amplifyconfig from './amplifyconfiguration.json';
+import outputs from './amplify_outputs.json';
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
 import App from './App';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-Amplify.configure(amplifyconfig);
+Amplify.configure({
+    Auth: {
+        Cognito: 
+        {
+            identityPoolId: outputs.auth.identity_pool_id,
+            allowGuestAccess: outputs.auth.unauthenticated_identities_enabled,
+            userPoolClientId: outputs.auth.user_pool_client_id,
+            userPoolId: outputs.auth.user_pool_id,
+            signUpAttributes: ['email'],
+            loginWith: {email: true },
+            mandatorySignIn: true,
+        }
+    },
+    API: {
+      REST: {
+        ['DeviceApi']: {
+          endpoint: outputs.custom.api_endpoint,
+          region: "us-east-1",
+        },
+      },
+    },
+  });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+    <Authenticator>
+      <React.StrictMode>
+          <App />
+      </React.StrictMode>
+    </Authenticator>
+);
+
