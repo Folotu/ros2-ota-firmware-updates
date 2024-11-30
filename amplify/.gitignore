@@ -6,3 +6,4 @@ amplifyconfiguration*
 .env
 yarn.lock
 package-lock.json
+.env.development

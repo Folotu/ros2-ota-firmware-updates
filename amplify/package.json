@@ -16,6 +16,7 @@
   "devDependencies": {
     "@aws-amplify/backend": "^1.7.0",
     "@aws-amplify/backend-cli": "^1.4.2",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "aws-cdk": "^2.167.1",
     "aws-cdk-lib": "^2.167.1",
     "constructs": "^10.4.2",
@@ -26,6 +27,9 @@
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.5.5",
+    "@cloudscape-design/components": "^3.0.839",
+    "@cloudscape-design/design-tokens": "^3.0.51",
+    "@cloudscape-design/global-styles": "^1.0.32",
     "aws-amplify": "^6.8.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

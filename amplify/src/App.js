@@ -1,10 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate  } from 'react-router-dom';
-import DeviceList from './components/DeviceList'; 
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import DeviceList from './components/DeviceList';
 import UpdateDevice from './components/UpdateDevice';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { fetchAuthSession } from '@aws-amplify/auth';
 import UnauthorizedPage from './components/UnauthorizedPage';
+import AppLayout from "@cloudscape-design/components/app-layout";
+import TopNavigation from "@cloudscape-design/components/top-navigation";
+
+// Apply dark mode styles
+document.body.setAttribute('data-mode', 'dark');
 
 function getNameFromEmail(email) {
     if (!email) return '';
@@ -12,69 +17,87 @@ function getNameFromEmail(email) {
     return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-export default function App() {
-    const [isAuthorized, setIsAuthorized] = useState(null); // null for loading, true/false for authorization state
+function App() {
+    const [isAuthorized, setIsAuthorized] = useState(null);
     const [error, setError] = useState(null);
-  
+
     useEffect(() => {
-      const verifyUserGroup = async () => {
+        verifyUserGroup();
+    }, []);
+
+    async function verifyUserGroup() {
         try {
-          // Fetch the authentication session to get tokens
-          const authSession = await fetchAuthSession({ fetchTokens: true, forceRefresh: true });
-          const { accessToken } = authSession.tokens;
-  
-          if (!accessToken) {
-            throw new Error('No access token found');
-          }
+            const { accessToken } = (await fetchAuthSession()).tokens ?? {};
+            
+            if (!accessToken) {
+                throw new Error('No access token found');
+            }
 
-        // Directly retrieve the groups from the token payload
-        const groups = accessToken.payload['cognito:groups'] || [];
+            const groups = accessToken.payload['cognito:groups'] || [];
 
-        // Check if the user is part of the "AuthorizedUsers" group
-        if (groups.includes('ROS-OTA-AuthorizedUsers')) {
-            setIsAuthorized(true);
-        } else {
-            setIsAuthorized(false);
-        }
+            if (groups.includes('ROS-OTA-AuthorizedUsers')) {
+                setIsAuthorized(true);
+            } else {
+                setIsAuthorized(false);
+            }
         } catch (err) {
-            console.error('Failed to verify user group:', err);
-            setError('Failed to verify user group. Please try again.');
+            console.error('Error verifying user group:', err);
+            setError(err.message);
             setIsAuthorized(false);
         }
-    };
-
-    verifyUserGroup();
-}, []);
+    }
   
-    // Show a loading indicator while verifying the user's group
     if (isAuthorized === null) {
-      return <p>Loading...</p>;
+        return <div>Loading...</div>;
     }
   
-    // Show an error message if something went wrong
     if (error) {
-      return (
-        <div>
-          <h1>Error</h1>
-          <p>{error}</p>
-        </div>
-      );
+        return (
+            <div>
+                <h1>Error</h1>
+                <p>{error}</p>
+            </div>
+        );
     }
+
     return (
         <Authenticator>
             {({ signOut, user }) => (
-                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true, }}>
-                    <div>
-                    <h1>Welcome {getNameFromEmail(user.signInDetails?.loginId) || user.username}</h1>
-                        <button onClick={signOut}>Sign Out</button>
-                        {isAuthorized ? (
-                            <Routes>
-                                <Route path="/" element={isAuthorized ? <DeviceList /> : <Navigate to="/unauthorized" replace />}/>
-                                <Route path="/update-device" element={<UpdateDevice />} />
-                            </Routes>
-                        ): ( 
-                        <UnauthorizedPage />
-                        )}       
+                <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <div className="awsui-dark-mode">
+                        <TopNavigation
+                            identity={{
+                                href: "/",
+                                title: "IoT Devices Management Home"
+                            }}
+                            utilities={[
+                                {
+                                    type: "button",
+                                    text: `${getNameFromEmail(user.signInDetails?.loginId) || user.username}`,
+                                    iconName: "user-profile"
+                                },
+                                {
+                                    type: "button",
+                                    text: "Sign out",
+                                    onClick: signOut
+                                }
+                            ]}
+                        />
+                        <AppLayout
+                            content={
+                                isAuthorized ? (
+                                    <Routes>
+                                        <Route path="/" element={<DeviceList />} />
+                                        <Route path="/update-device" element={<UpdateDevice />} />
+                                        <Route path="*" element={<Navigate to="/" />} />
+                                    </Routes>
+                                ) : (
+                                    <UnauthorizedPage />
+                                )
+                            }
+                            toolsHide={true}
+                            navigationHide={true}
+                        />
                     </div>
                 </Router>
             )}
@@ -82,3 +105,4 @@ export default function App() {
     );
 }
 
+export default App;

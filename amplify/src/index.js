@@ -29,6 +29,11 @@ Amplify.configure({
     },
   });
 
+// Add global styles to body
+document.body.style.backgroundColor = '#1a1a1a';
+document.body.style.color = '#ffffff';
+document.body.style.margin = '0';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
     <Authenticator>
