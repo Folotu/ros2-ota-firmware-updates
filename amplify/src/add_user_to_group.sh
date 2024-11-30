@@ -4,7 +4,7 @@
 set -e
 
 # Hardcoded group name
-GROUP_NAME="AuthorizedUsers"
+GROUP_NAME="ROS-OTA-AuthorizedUsers"
 
 # Path to amplify_outputs.json
 AMPLIFY_OUTPUTS_FILE="./amplify_outputs.json"

@@ -31,7 +31,7 @@ export default function App() {
         const groups = accessToken.payload['cognito:groups'] || [];
 
         // Check if the user is part of the "AuthorizedUsers" group
-        if (groups.includes('AuthorizedUsers')) {
+        if (groups.includes('ROS-OTA-AuthorizedUsers')) {
             setIsAuthorized(true);
         } else {
             setIsAuthorized(false);

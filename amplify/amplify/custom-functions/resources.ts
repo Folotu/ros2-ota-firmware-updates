@@ -21,12 +21,14 @@ export class LambdaStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const stackName = this.node.addr.substring(0, 8);
+
     // Define the Lambda function to list devices
-    const listDevicesFunction = new lambda.Function(this, 'ListDevicesFunction', {
-      runtime: lambda.Runtime.PYTHON_3_10, // Specify the runtime
-      handler: 'list_devices.lambda_handler', // Specify the handler function
+    const listDevicesFunction = new lambda.Function(this, `ListDevicesFunction-${stackName}`, {
+      runtime: lambda.Runtime.PYTHON_3_10,
+      handler: 'list_devices.lambda_handler',
       code: lambda.Code.fromAsset('./amplify/custom-functions/listDevices'),
-      functionName: 'ListDevicesFunction',
+      functionName: `ListDevicesFunction-${stackName}`,
       description: 'Custom Lambda function to list devices, created using CDK',
       timeout: Duration.seconds(30),
       memorySize: 128,
@@ -41,22 +43,22 @@ export class LambdaStack extends Stack {
     );
 
     // Define the Lambda function to list firmware versions
-    const listVersionsFunction = new lambda.Function(this, 'ListVersionsFunction', {
+    const listVersionsFunction = new lambda.Function(this, `ListVersionsFunction-${stackName}`, {
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'list_versions.lambda_handler',
       code: lambda.Code.fromAsset('./amplify/custom-functions/listVersions'),
-      functionName: 'ListVersionsFunction',
+      functionName: `ListVersionsFunction-${stackName}`,
       description: 'Custom Lambda function to list firmware versions, created using CDK',
       timeout: Duration.seconds(30),
       memorySize: 128,
     });
 
     // Define the Lambda function to update devices
-    const updateDevicesFunction = new lambda.Function(this, 'UpdateDevicesFunction', {
+    const updateDevicesFunction = new lambda.Function(this, `UpdateDevicesFunction-${stackName}`, {
       runtime: lambda.Runtime.PYTHON_3_10,
       handler: 'update_device.lambda_handler',
       code: lambda.Code.fromAsset('./amplify/custom-functions/updateDevice'),
-      functionName: 'UpdateDevicesFunction',
+        functionName: `UpdateDevicesFunction-${stackName}`,
       description: 'Custom Lambda function to update devices, created using CDK',
       timeout: Duration.seconds(30),
       memorySize: 128,
@@ -71,8 +73,8 @@ export class LambdaStack extends Stack {
     );
 
     // Create Cognito User Pool
-    const userPool = new cognito.UserPool(this, 'MyUserPool', {
-      userPoolName: 'MyUserPool',
+    const userPool = new cognito.UserPool(this, `MyUserPool-${stackName}`, {
+        userPoolName: `MyUserPool-${stackName}`,
       selfSignUpEnabled: true,
       signInAliases: { email: true },
       autoVerify: { email: true },
@@ -85,15 +87,15 @@ export class LambdaStack extends Stack {
     });
 
     // Add User Pool Client
-    const userPoolClient = new cognito.UserPoolClient(this, 'MyUserPoolClient', {
+    const userPoolClient = new cognito.UserPoolClient(this, `MyUserPoolClient-${stackName}`, {
       userPool,
       generateSecret: false,
     });
 
     // Create Cognito Group for Authorized Users
-    const authorizedUsersGroup = new cognito.CfnUserPoolGroup(this, 'AuthorizedUsersGroup', {
+    const authorizedUsersGroup = new cognito.CfnUserPoolGroup(this, `ROS-OTA-AuthorizedUsersGroup`, {
         userPoolId: userPool.userPoolId,
-        groupName: 'AuthorizedUsers',
+        groupName: `ROS-OTA-AuthorizedUsers`,
       });
 
     this.userPoolId = userPool.userPoolId;
@@ -101,7 +103,7 @@ export class LambdaStack extends Stack {
     this.userPoolEndpoint = `https://${this.userPoolId}.auth.${this.region}.amazoncognito.com`
 
     // Create Cognito Identity Pool and link User Pool
-    const identityPool = new cognito.CfnIdentityPool(this, 'MyIdentityPool', {
+    const identityPool = new cognito.CfnIdentityPool(this, `MyIdentityPool-${stackName}`, {
       allowUnauthenticatedIdentities: false,
       cognitoIdentityProviders: [
         {
@@ -109,10 +111,12 @@ export class LambdaStack extends Stack {
           clientId: userPoolClient.userPoolClientId,
         },
       ],
+        identityPoolName: `MyIdentityPool-${stackName}`,
     });
 
     // IAM Role for the Authorized Users group
-    const groupIAMRole = new aws_iam.Role(this, 'AuthorizedUsersGroupRole', {
+    const groupIAMRole = new aws_iam.Role(this, `ROS-OTA-AuthorizedUsersGroupRole`, {
+        roleName: `ROS-OTA-AuthorizedUsersGroupRole`,
         assumedBy: new aws_iam.FederatedPrincipal(
           'cognito-identity.amazonaws.com',
           {
@@ -131,11 +135,11 @@ export class LambdaStack extends Stack {
     this.identityPoolId = identityPool.ref;
 
     // Define API Gateway
-    const api = new RestApi(this, 'DeviceApi', {
-      restApiName: 'Device Service',
+    const api = new RestApi(this, `DeviceApi-${stackName}`, {
+      restApiName: `Device Service`,
       description: 'API for managing IoT devices and firmware versions.',
       defaultCorsPreflightOptions: {
-        allowOrigins: ['http://localhost:3000'],
+        allowOrigins: Cors.ALL_ORIGINS,
         allowMethods: Cors.ALL_METHODS,
         allowHeaders: [
           'Content-Type',
@@ -170,7 +174,7 @@ export class LambdaStack extends Stack {
     });
 
     // Attach Cognito Authorizer to API Gateway
-    const authorizer = new CognitoUserPoolsAuthorizer(this, 'MyUserPoolAuthorizer', {
+    const authorizer = new CognitoUserPoolsAuthorizer(this, `MyUserPoolAuthorizer-${stackName}`, {
       cognitoUserPools: [userPool],
     });
 
