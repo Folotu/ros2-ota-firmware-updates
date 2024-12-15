@@ -6,41 +6,24 @@ set -e
 # Hardcoded group name
 GROUP_NAME="ROS-OTA-AuthorizedUsers"
 
-# Path to amplify_outputs.json
-AMPLIFY_OUTPUTS_FILE="./amplify_outputs.json"
-
 # Function to display usage
 usage() {
-    echo "Usage: $0 -u <username>"
+    echo "Usage: $0 -u <username> -p <user_pool_id>"
     exit 1
 }
 
 # Parse arguments
-while getopts ":u:" opt; do
+while getopts ":u:p:" opt; do
     case ${opt} in
         u) USERNAME=$OPTARG ;;
+        p) USER_POOL_ID=$OPTARG ;;
         *) usage ;;
     esac
 done
 
-# Check if username is provided
-if [[ -z "$USERNAME" ]]; then
+# Check if username and user_pool_id are provided
+if [[ -z "$USERNAME" || -z "$USER_POOL_ID" ]]; then
     usage
-fi
-
-# Verify amplify_outputs.json exists
-if [[ ! -f "$AMPLIFY_OUTPUTS_FILE" ]]; then
-    echo "Error: amplify_outputs.json not found at $AMPLIFY_OUTPUTS_FILE."
-    exit 1
-fi
-
-# Extract user_pool_id from amplify_outputs.json
-USER_POOL_ID=$(jq -r '.auth.user_pool_id' "$AMPLIFY_OUTPUTS_FILE")
-
-# Check if user_pool_id is valid
-if [[ -z "$USER_POOL_ID" || "$USER_POOL_ID" == "null" ]]; then
-    echo "Error: Could not extract user_pool_id from $AMPLIFY_OUTPUTS_FILE."
-    exit 1
 fi
 
 # Add the user to the group

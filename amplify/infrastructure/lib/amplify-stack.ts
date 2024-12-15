@@ -74,17 +74,21 @@ export class AmplifyStack extends cdk.Stack {
       }),
       buildSpec: cdk.aws_codebuild.BuildSpec.fromObjectToYaml({
         version: 1,
-        frontend: {
+        backend: {
           phases: {
-            preBuild: {
-              commands: [
-                'yarn install --frozen-lockfile',
-                'yarn ampx pipeline-deploy --branch $AWS_BRANCH_NAME --app-id $AWS_APP_ID'
-              ]
-            },
             build: {
               commands: [
-                'yarn runbuild'
+                'yarn add @aws-amplify/backend-cli@^1.4.2 @aws-amplify/backend@^1.7.0 aws-cdk-lib@^2.167.1 constructs@^10.4.2',
+                'yarn install --frozen-lockfile',
+                'yarn ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID'
+              ]
+            },
+        }},
+        frontend: {
+          phases: {
+            build: {
+              commands: [
+                'yarn run build'
               ]
             }
           },
@@ -104,7 +108,21 @@ export class AmplifyStack extends cdk.Stack {
       environmentVariables: {
         NODE_ENV: 'production',
         AMPLIFY_MONOREPO_APP_ROOT: '/',
-        AMPLIFY_DIFF_DEPLOY: 'false'
+        AMPLIFY_DIFF_DEPLOY: 'false',
+        _LIVE_UPDATES: JSON.stringify([
+          {
+            name: 'Amplify CLI',
+            pkg: '@aws-amplify/cli',
+            type: 'npm',
+            version: 'latest'
+          },
+          {
+            name: 'Node.js version',
+            pkg: 'node',
+            type: 'nvm',
+            version: '20.18.1'
+          }
+        ])
       }
     });
 
@@ -119,6 +137,12 @@ export class AmplifyStack extends cdk.Stack {
 
     // Build specification
     amplifyApp.addCustomRule(amplify.CustomRule.SINGLE_PAGE_APPLICATION_REDIRECT);
+
+    // Add managed policy to Amplify app role
+    const amplifyRole = amplifyApp.node.findChild('Role') as iam.Role;
+    amplifyRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('service-role/AmplifyBackendDeployFullAccess')
+    );
 
     // Output the repository clone URL and other useful information
     new cdk.CfnOutput(this, 'RepositoryCloneUrlHttp', {
