@@ -39,7 +39,21 @@ Note the output from the CDK deployment:
 ### 2. Access Your Application
 Once the deployment is complete, you can access your application through the Amplify console. The URL will be available in the Amplify Console under "Domain Management". You can also access the application using the URL provided in the output of the CDK deployment. The `ROS2OTAAmplifyStack.AmplifyAppDefaultDomain` output will contain the URL.
 
-### TODO: Instructions to add users to the Cognito User Pool Authorized Group
+### 3. Adding Users to the Authorized Group
+
+After deploying your application, you'll need to add users to the authorized Cognito group to grant them access. Use the provided script:
+
+1. First, get your Cognito User Pool ID from the AWS Console or the Amplify CLI output
+2. Run the add_user_to_group.sh script with your username and user pool ID:
+
+```bash
+cd src
+./add_user_to_group.sh -u <username> -p <user-pool-id>
+```
+
+For example: `./add_user_to_group.sh -u john.doe@example.com -p us-east-1_abc123xyz`
+
+This will add the specified user to the "ROS-OTA-AuthorizedUsers" group, granting them access to manage firmware updates through the web application.
 
 ## Infrastructure Details
 
