@@ -63,7 +63,7 @@ def handler(event: Dict[str, Any], context: Any):
     
     try:
         # Get the source repository URL from GitHub
-        source_repo_url = "https://github.com/folotu/ros2-ota-firmware-updates/archive/refs/heads/main.zip"
+        source_repo_url = "https://github.com/aws-samples/ros2-ota-firmware-updates/archive/refs/heads/main.zip"
         
         if event.get('RequestType') in ['Create', 'Update']:
             print('Starting repository population process...')
